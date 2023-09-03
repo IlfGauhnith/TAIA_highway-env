@@ -3,3 +3,4 @@ highway-env
 opencv-python
 moviepy
 stable_baselines3
+tensorboard
