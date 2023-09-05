@@ -50,19 +50,22 @@ def createModel(env, model_algorithm="dqn", tensorboard_log_path="./model/dqn/te
         os.makedirs(checkpoint_load_path, exist_ok=True) # Create directory and dont raise error if already exists
 
         files = os.listdir(checkpoint_load_path)
-        print(files)
         files = list(filter(lambda f: f.startswith(checkpoint_file_prefix) and f.endswith("_steps.zip"), files))
-        print(files)
         files = sorted(files, key=lambda f: int(f.split("_")[-2]))
-        print(files)
 
-        assert len(files) > 0, f"There's no {model_algorithm} checkpoints files at {checkpoint_load_path} with a '{checkpoint_file_prefix}' prefix."
+        if len(files) == 0:
+            print(f"There's no {model_algorithm} checkpoints files at {checkpoint_load_path} with a '{checkpoint_file_prefix}' prefix.")
+            print(f"Creating new {model_algorithm} model.")
+            return model
 
         last_checkpoint_file, _ = os.path.splitext(files[-1])
 
+
         print(f"Loading {model_algorithm} model from last checkpoint {files[-1]}")
+
         model.set_parameters(os.path.join(checkpoint_load_path, last_checkpoint_file))
         model.num_timesteps = int(last_checkpoint_file.split("_")[-2])
+
         return model
 
 
