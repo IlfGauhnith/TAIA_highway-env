@@ -1,7 +1,9 @@
 __pycache__
 .venv
-output
+output/training
 model/dqn/checkpoint
 model/dqn/tensorboard
 model/ppo/checkpoint
 model/ppo/tensorboard
+model/dqn/statistics
+model/ppo/statistics

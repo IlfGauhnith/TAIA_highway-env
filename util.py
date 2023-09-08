@@ -1,12 +1,12 @@
 import gymnasium as gym
 from gymnasium.wrappers import RecordVideo, RecordEpisodeStatistics
-from stable_baselines3 import DQN
+from stable_baselines3 import DQN, PPO
 import numpy as np
 from custom_wrappers import FrameStack, SaveEpisodeStatistics
 import os
 
 
-def defaultEnvironment(video_save_path, video_file_prefix, episode_statistics_save_path, episode_statistics_file_prefix):
+def defaultEnvironment(video_save_path, video_file_prefix, video_episode_trigger=lambda e: e % 1000 == 0, episode_statistics_save_path="", episode_statistics_file_prefix=""):
     env = gym.make('highway-v0', render_mode="rgb_array")
 
     # Observation space as grayscale images without stacking and with (128, 64) shape.
@@ -29,13 +29,15 @@ def defaultEnvironment(video_save_path, video_file_prefix, episode_statistics_sa
 
     env = RecordVideo(env=env, video_folder=video_save_path,
                       name_prefix=video_file_prefix,
-                      episode_trigger=lambda e: e % 1000 == 0)
+                      episode_trigger=video_episode_trigger)
     env.unwrapped.set_record_video_wrapper(env)
 
     env = FrameStack(env, 4, np.uint8)
-    env = RecordEpisodeStatistics(env, deque_size=1000)
-    env = SaveEpisodeStatistics(
-        env, episode_statistics_save_path, episode_statistics_file_prefix)
+
+    if episode_statistics_save_path != "" and episode_statistics_file_prefix != "":
+        env = RecordEpisodeStatistics(env, deque_size=1000)
+        env = SaveEpisodeStatistics(
+            env, episode_statistics_save_path, episode_statistics_file_prefix)
 
     return env
 
@@ -73,7 +75,7 @@ def createModel(env, model_algorithm="dqn", tensorboard_log_path="./model/dqn/te
     return model
 
 def defaultModel(env, model_algorithm, tensorboard_log_path):
-     if model_algorithm == "dqn":
+    if model_algorithm == "dqn":
         return DQN("CnnPolicy", env,
                    learning_rate=5e-4,
                    buffer_size=50_000,
@@ -86,3 +88,8 @@ def defaultModel(env, model_algorithm, tensorboard_log_path):
                    exploration_fraction=0.9,
                    verbose=1,
                    tensorboard_log=tensorboard_log_path)
+    elif model_algorithm == "ppo":
+        return PPO("CnnPolicy",
+                    env,
+                    verbose=1,
+                    tensorboard_log=tensorboard_log_path)
